@@ -425,20 +425,20 @@ Django provides:<br>
 5)CustomAuthentication.<br>
 
 <h1>Permission</h1>
-Permissions are used to grant or deny access for different classes of users to different parts of the API.<br>
-Permission check are always run at the very start of the view, before any other code is allowed to proceed.<br>
-Permission checks will typically use the authentication information in the request.user and request.auth properties to determine if the incoming request should be permitted.<br>
-So we can use request.user and request.auth to check the one who is loggin in.<br>
-<b>Django provides:</b>
-1)AllowAny  = have permisiion to all users and everyone without password
-2)IsAuthentication = every users including superuser, normal user, staff user can loging with there username and pswd, and deny if he's unauthenticated. This is suatable if you want your API to only be accessible to registerd users.
-3)IsAdminUser = Only allowed to users whos user.is_staff =  TRUE, this is suatable if you want your API to be accessible to a subset of trusted administrators.
+<li>Permissions are used to grant or deny access for different classes of users to different parts of the API.</li>
+<li>Permission check are always run at the very start of the view, before any other code is allowed to proceed.</li>
+<li>Permission checks will typically use the authentication information in the request.user and request.auth properties to determine if the incoming request should be permitted.</li>
+<li>So we can use request.user and request.auth to check the one who is loggin in.</li>
+<b>Django provides:</b><br>
+1)AllowAny  = have permisiion to all users and everyone without password.<br>
+2)IsAuthentication = every users including superuser, normal user, staff user can loging with there username and pswd, and deny if he's unauthenticated. This is suatable if you want your API to only be accessible to registerd users.<br>
+3)IsAdminUser = Only allowed to users whos user.is_staff =  TRUE, this is suatable if you want your API to be accessible to a subset of trusted administrators.<br>
 
 
 <h1>Basic Authentication in ViewSet</h1>
-We need username, password for basic authentication. This one is generally only appropriate for testing purpose not for production.<br>
-Note: If you provide basic authentication in production you must ensure that your API is only available over https. <br>
-You should also ensure that your API clients will always re-request the username and password at login, and will never store those details to persistent storage.<br>
+<li>We need username, password for basic authentication. This one is generally only appropriate for testing purpose not for production.</li>
+<li>Note: If you provide basic authentication in production you must ensure that your API is only available over https. </li>
+<li>You should also ensure that your API clients will always re-request the username and password at login, and will never store those details to persistent storage.</li>
 <pre>
 
 </pre>
