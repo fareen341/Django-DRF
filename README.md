@@ -410,11 +410,64 @@ Using these attributes we can perform particular action which we need.
 Example do something when action == List these kind of logics we can do.
 </pre>
 
-PENDING
-#GETTING ALL METHODS USING MODEL VIEWSET
-# class StudentModelViewSet(viewsets.ModelViewSet):
-#     queryset=Student.objects.all()
-#     serializer_class=StudentSerializer
+<h1>Model ViewSet DRF</h1>
+<pre>
+Same model serializer, model, admin as above.
+
+This will provides the entire CRUD DRF 
+---------------------------------------
+views.py
+--------
+
+from django.shortcuts import render
+from rest_framework.response import Response
+from .models import Student
+from .serializers import StudentSerializer
+from rest_framework import status
+from rest_framework import viewsets
+
+class StudentModelViewSet(viewsets.ModelViewSet):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    
+urls.py
+--------
+from django.urls import path, include
+from viewsetapi import views
+from rest_framework.routers import DefaultRouter
+
+#creatting router object
+router=DefaultRouter()
+
+#register studentviewset with router
+router.register('studentapi',views.StudentViewSet,basename='student')
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api',include(router.urls)),
+]
+
+This will provide read only DRF, will only give readonly(list and retrive), can see the whole list
+and when we hit with pk we can only see that particular list, we cannot post,update, delete this is real only
+--------------------------------
+
+views.py
+--------
+from django.shortcuts import render
+from rest_framework.response import Response
+from .models import Student
+from .serializers import StudentSerializer
+from rest_framework import status
+from rest_framework import viewsets
+
+class RetriveListStudent(viewsets.ReadOnlyModelViewSet):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+
+urls.py
+-------
+same urls as above just different view name.
+</pre>
 
 <h1>Authentication in DRF</h1>
 Django provides:<br>
@@ -440,5 +493,32 @@ Django provides:<br>
 <li>Note: If you provide basic authentication in production you must ensure that your API is only available over https. </li>
 <li>You should also ensure that your API clients will always re-request the username and password at login, and will never store those details to persistent storage.</li>
 <pre>
+We can create API in any way using viewset, modelviewset, genericviewset etc and can add authentication and permission in all of them
+Here i'll use model viewset, This authentication is for class based, for function based it's slight different
 
+With authentication we have to give permissions as well.
+
+views.py
+---------
+from django.shortcuts import render
+from rest_framework.response import Response
+from .models import Student
+from .serializers import StudentSerializer
+from rest_framework import status
+from rest_framework import viewsets
+
+#For authentication
+from rest_framework.authentication import BasicAuthentication
+
+#For permission
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+
+class StudentModelViewSet(viewsets.ModelViewSet):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    authentication_classes=[BasicAuthentication]
+    permission_classes=[IsAuthenticated]
 </pre>
+
+![authentication](https://user-images.githubusercontent.com/59610617/130386758-e194fd40-6f51-4bb3-828d-3b58721392a2.png)<br>
+
