@@ -660,6 +660,9 @@ We can give any logic as in, in a blog post the person who created blog have edi
 <pre>
 Same models.py, admin.py, serializers.py, urls.py as above
 
+settings.py
+include rest_framework, rest_framework.authtoken in installed apps.
+
 Step1:
 settings.py
 INSTALLED_APPS = [
@@ -817,7 +820,6 @@ class Student(viewsets.ModelViewSet):
     authentication_classes=[CustomeAuthentication]
     permission_classes=[IsAuthenticated]
  
- 
 For this we'll hit http://127.0.0.1:8000/studentapi/username=admin  OR
 For delete, updtae http://127.0.0.1:8000/2/studentapi/username=admin
 </pre>
@@ -838,11 +840,296 @@ REST_FRAMEWORK={
         )
 }
 </pre>
+Creating jwt project
+<pre>
+install simple jwt >pip install djangorestframework-simplejwt
 
-pending
+include 'rest_framework', 'jwtapp' in installed apps
 
+same models.py, admin.py, serializers.py
 
+urls.py
+from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshSlidingView,TokenVerifyView
 
+router=DefaultRouter()
+
+router.register('studentapi',views.Student,basename='student')
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('',include(router.urls)),
+    path('gettoken/',TokenObtainPairView.as_view(),name='tokenobtain'),
+    path('refreshtoken/',TokenRefreshSlidingView.as_view(), name='tokenrefresh'),
+    path('verifytoken/',TokenVerifyView.as_view(), name='tokenverify')   
+]
+
+TokenObtainPairView: return access and referesh token
+TokenRefreshSlidingView: return refresh token generate
+
+TO GENERATE TOKEN:
+-------------------
+we'll use gettoken url which is in urls:
+user will request token like this
+http POST http://127.0.0.1:8000/gettoken/ username="admin" password="admin"
+
+Output:
+{
+    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.ey",
+    "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ"
+}
+This will return access and refresh token, access token has default validity for 5 minutes after 5 minutes it'll expire, then user have to use refresh token to generate access token to access api he don't need to give username, password again he can use refresh token. refresh token has one day validity
+
+Using the access token to access api:
+http POST http://127.0.0.1:8000/verifytoken/ token="copy paste the access token"
+
+If the access token expired:
+http POST http://127.0.0.1:8000/refreshtoken/ refresh="copy paste the refresh token"
+
+This will return the access token
+
+ACCESS TOKEN:
+-------------
+views.py
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+class Student(viewsets.ModelViewSet):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    authentication_classes=[JWTAuthentication]
+    permission_classes=[IsAuthenticated]
+
+Now to access this api user need JWT Token
+
+To access request:
+http http://127.0.0.1:8000/studentapi/ 'Authorization:Bearer copy and paste access token'
+
+To post request:
+http -f POST http://127.0.0.1:8000/studentapi/ name=annu roll=2 city=Mumbai 'Authorization:Bearer paste access key'
+
+To update:
+http PUT http://127.0.0.1:8000/studentapi/2/ name=sam roll=20 city=Mumbai 'Authorization:Bearer paste access key'
+
+http DELETE http://127.0.0.1:8000/studentapi/2/ 'Authorization:Bearer 'Authorization:Bearer paste access key'
+
+We should create a application for this token, users will not use command line for access to know more read the documentation of simple jwt 
+</pre>
+To override the simplejwt methods:
+To increase the lifetime of the access token:
+To get refresh token every time when we use refresh token, make this option TRUE, by default it is FALSE(meaning everytime we request for access token using refresh token, it only returns the access token, but is this option is TRUE it'll return refresh token every time)
+<pre>
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME':timedelta(minutes=10),      #lifetime of access token
+    'REFRESH_TOKEN_LIFETIME':timedelta(days=2),         #lifetime of refresh token
+    'ROTATE_REFRESH_TOKEN':True                         #to generate refresh token everytime
+}
+</pre>
+
+<h1>Throttling</h1>
+<li>Your API might have a restrictive throttle for unauthenticated requests, and a less restrictive throttle for authentication requests.</li>
+<pre>
+For globally
+in settings.py
+
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES':[
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES':{
+        #rates can be include in second, minute, hour or day
+        'anon':'100/day',       #only unauthenticated users can only login for 100 times per day 
+        'user':'1000/day'       #authenticated users can login only 1000 times per day
+    }
+}
+</pre>
+
+<li>AnonRateThrottle: The AnonRateThrottle will only ever throttle unauthenticated users. The IP address of the incoming request is used to generate a unique key to throttle against.</li>
+<li>UserRateThrottle: The UserRateThrottle will throttle users to a given rate of requests across
+the API. The user id is used to generate a unique key to throttle against. Unauthenticated requests will fall back to using the IP address of the incoming request to generate a unique key to throttle against.</li>
+<li>ScopedRateThrottle: use it when we want to restrict some part of api.</li>
+
+Practical:
+<pre>
+same serialisers.py, models.py, admins.py, settings.py as above example
+
+urls.py
+from viewsetapi import views
+from rest_framework.routers import DefaultRouter
+
+router=DefaultRouter()
+router.register('studentapi',views.StudentModelViewSet,basename='student')
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api',include(router.urls)),
+    path('auth/',include('rest_framework.urls',namespace='rest_framework'))
+]
+
+views.py
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+
+class StudentModelViewSet(viewsets.ModelViewSet):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    authentication_classes=[SessionAuthentication]
+    permission_classes=[IsAuthenticated]
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+ 
+settings.py 
+Note: this throttle is for all the classes, it's global
+REST_FRAMEWORK={
+    'DEFAULT_THROTTLE_RATES':{
+        'anon': '2/day',
+        'user': '5/day',
+    }
+}
+</pre>
+When anoynmous user request 2 times, when it is 3rd time they'll get throttle msg. Same when authenticated user request 5 times, on 6th time they'll msg. To check this throttle refresh browser 5 times and on 6th they'll get request throttle msg.
+<pre>
+{
+    "detail": "Request was throttled. Expected available in 86388 seconds."
+}
+</pre>
+
+To give different rate for different classes
+<pre>
+create (mythrottle.py(give any name).
+from rest_framework.throttling import UserRateThrottle
+
+class AnnuRateThrottle(UserRateThrottle):
+    scope = "annu"
+    
+settings.py
+REST_FRAMEWORK={
+    'DEFAULT_THROTTLE_RATES':{
+        'anon': '2/day',
+        'annu': '2/minute'
+    }
+}
+
+views.py
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from viewsetapi.throttle import AnnuRateThrottle
+
+class StudentModelViewSet(viewsets.ModelViewSet):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    authentication_classes=[SessionAuthentication]
+    permission_classes=[IsAuthenticatedOrReadOnly]
+    throttle_classes = [AnonRateThrottle, AnnuRateThrottle]
+</pre>
+On 3rd request it'll give throttle message:
+<pre>
+{
+    "detail": "Request was throttled. Expected available in 54 seconds."
+}
+ 
+Likewise we can give throttle for different class
+</pre>
+
+<h1>ScopedRateThrottle</h1>
+Using this we can give different throttle to diffrent classes.
+<pre>
+urls.py
+    path('studentapi/',views.StudentList.as_view()),
+    path('studentapipost/',views.StudentCreate.as_view()),                 
+    path('studentapi/<int:pk>/',views.StudentRetrive.as_view()),
+    
+settings.py
+REST_FRAMEWORK={
+    'DEFAULT_THROTTLE_RATES':{
+        'viewstudent': '2/minute',
+        'poststudent': '1/minute'
+    }
+}
+
+views.py
+from rest_framework.generics import ListAPIView,CreateAPIView,ListCreateAPIView, RetrieveUpdateAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView
+from rest_framework.throttling import ScopedRateThrottle
+
+class StudentList(ListAPIView):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'viewstudent'
+
+class StudentCreate(CreateAPIView):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'poststudent'
+    
+
+class StudentRetrive(RetrieveAPIView):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'viewstudent'
+
+after 2 request in list, retrive we'll get throttle deny msg: and for post we'll only get 1 request per minute.
+Likewise we can give for delete and update
+</pre>
+
+<h1>Filtering in rest api</h1>
+To filter based on user, example fiter based on admin
+<pre>
+serialializers.py
+from rest_framework import serializers
+from .models import Student
+
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Student
+        fields=['id','name','roll','city','passby']
+        
+models.py
+from django.db import models
+
+class Student(models.Model):
+    name=models.CharField(max_length=50)
+    roll=models.IntegerField()
+    city=models.CharField(max_length=50)
+    passby=models.CharField(max_length=10)
+
+urls.py
+from functionbasedapp import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('studentapi/',views.StudentList.as_view()),
+]
+
+views.py
+class StudentList(ListAPIView):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    def get_queryset(self):
+        user = self.request.user            
+        return Student.objects.filter(passby=user)          #filter based on user
+ 
+If the passby is admin, it'll filter by admin.
+This scenario maybe usefull in book shop website where the users who publish the book can see only the books published by him.
+</pre>
+Data:
+
+![data](https://user-images.githubusercontent.com/59610617/130651528-5aba1bf7-c307-4eaf-b061-dc4ac8d30992.png)<br>
+
+<h3>The current user which is logged in is fareen so it'll filter based on current user which is fareen</h3>
+
+![filter](https://user-images.githubusercontent.com/59610617/130651628-56a26338-9e02-4744-9edf-1976100927cb.png)<br>
+
+<h2>Filter based on city</h2>
+<pre>
+Step 1: for this we need filter installed >pip install django-filter
+
+Step 2: settings.py in installed apps
+    'rest_framework',
+    'django-filter',
+    
+PENDING
+</pre>
 
 
 
