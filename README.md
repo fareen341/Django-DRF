@@ -498,6 +498,10 @@ Here i'll use model viewset, This authentication is for class based, for functio
 
 With authentication we have to give permissions as well.
 
+urls.py
+-------
+same urls as above just different view name.
+
 views.py
 ---------
 from django.shortcuts import render
@@ -518,7 +522,78 @@ class StudentModelViewSet(viewsets.ModelViewSet):
     serializer_class=StudentSerializer
     authentication_classes=[BasicAuthentication]
     permission_classes=[IsAuthenticated]
+ 
+Globally authentication, permission for all the classes:
+If we want to give this permission to every model then we can define it globally:
+
+settings.py
+REST_FRAMEWORK={
+    'DEFAULT_AUTHENTICATION_CLASSES':['rest_framework.authentication.BasicAuthentication'],
+    'DEFAULT_PERMISSION_CLASSES':['rest_framework.permissions.IsAuthenticated']
+}
+
+If for a perticular class we don't need the default settings.py authentication, pemission
+class 1{
+    //will have authentication, permission coming from settings.py
+    }
+ 
+class 2{
+    //will have authentication, permission coming from settings.py
+    }
+    
+class 3{
+    authentication_classes=[BasicAuthentication]
+    permission_classes=[AllowAny]
+    
+class 1, class2 will have global permission and class 3 will have it's own permission which is allowany.
+
+We can also give many permission to one class:
+permission_classes=[AllowAny, IsAdminUser...etc] Same goes for authentication as in [SesstionAuthentication, BasicAuthentication...etc]
 </pre>
 
 ![authentication](https://user-images.githubusercontent.com/59610617/130386758-e194fd40-6f51-4bb3-828d-3b58721392a2.png)<br>
+
+
+<h1>Session Authentication</h1>
+<li>This authentication scheme use djangos's default session backend for authentication. This one is appropriate for AJAX clients that are running in the same session context as your website.</li> 
+<li>If successfully authenticated, this authentication provides the following credential:</li>
+1)request.user will be django user instance.<br>
+2)request.auth will be None.<br>
+3)unauthenticated responses: return HTTP 403 forbidden response.<br>
+<li>Tf you're using an AJAX style API with SessionAuthentication, you'll need to make sure you include a valid CSRF token for any "unsafe" HTTP method calls, such as PUT, PATCH, POST or DELETE requests.</li>
+<pre>
+urls.py
+urls.py
+--------
+from django.urls import path, include
+from viewsetapi import views
+from rest_framework.routers import DefaultRouter
+
+#creatting router object
+router=DefaultRouter()
+
+#register studentviewset with router
+router.register('studentapi',views.StudentViewSet,basename='student')
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api',include(router.urls)),
+]
+</pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
