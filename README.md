@@ -1,11 +1,19 @@
 [<p>1.1 Getting Started with Django</p>](#one)
 [<p>2.2 URLs and Views</p>](#two)
 
+NOTE: for using rest_framework it must be installed and included in the installed_apps
+
 <a name="one"><h2>1.1 Django Web Framework</h2></a><br>
 <a name="two"><h2>1.2 Django Web Framework</h2></a><br>
 
 <h1>Using json Renderer</h1>
 <pre>
+settings.py
+-----------
+INSTALLED_APPS = [
+    'rest_framework',
+]
+
 models.py
 ---------
 from django.db import models
@@ -163,6 +171,7 @@ urls.py
     path('studentUpdateapi/<int:pk>',views.StudentUpdate.as_view()),
     path('studentDeleteapi/<int:pk>',views.StudentDestroy.as_view()),
 </pre>
+
 <h1>Grouping GenericAPIView</h1>
 In the above example we've created url's for every method. In this example we'll group ListModelMixin, CreateModelMixin cuz they don't need pk and RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin needs pk so we'll group them accordangly.
 <pre>
@@ -486,7 +495,32 @@ Django provides:<br>
 1)AllowAny  = have permisiion to all users and everyone without password.<br>
 2)IsAuthentication = every users including superuser, normal user, staff user can loging with there username and pswd, and deny if he's unauthenticated. This is suatable if you want your API to only be accessible to registerd users.<br>
 3)IsAdminUser = Only allowed to users whos user.is_staff =  TRUE, this is suatable if you want your API to be accessible to a subset of trusted administrators.<br>
+4)IsAuthenticationOrReadOnly - authenticated user can perform write permission and other all users(anoymous) can read only.<br>
+5)DjangoModelPermission - this permission is tired with django auth, like we create model we get change, add, view permission on admin interface. Giving the select permission as in just post or put or just post and put etc. Here unauthenticated user cannot view data.<br>
+For django model permission we need to login on admin and give permissionon particular model which we want the particular user to access, for giving only add student permission allow that user add permission on django admin and when we login we can see that user will have read and add permission
+Note: Every user after login have view data permission, which is default.
+SuperUser have all permissions, but the user whos staff status is true for this user also we've to give model permission.<br>
+6)DjangoModelPermissionOrAnonReadOnly - it is same as DjangoModelPermission except it allow unauthenticated user to view data.<br>
+In django model permission we must give login credential even for view data but in DjangoModelPermissionOrAnonReadOnly anoynmous users can view data. So when we hit /api url anybody can view the data but cannot delete,update and add data.<br>
+7)DjangoObjectPermissions - 
+8)CustomPermission:
 
+Third Party Permissions:
+
+![thirdparty](https://user-images.githubusercontent.com/59610617/130565201-cafa439d-50e9-4422-84a9-e69a0ee27e2e.png)<br>
+
+<h1>Authentication</h1>
+<li>Basic Authentication</li>
+<li>Session AUthentication</li>
+<li>Token Authentication</li>
+<li>RemoteUser Authentication</li>
+<li>Custome Authentication</li>
+
+Third party Authentication:
+
+![auth](https://user-images.githubusercontent.com/59610617/130578972-9c4d4964-7e64-4ea3-ae16-2eba9bec92d6.png)<br>
+
+In all of this we'll see "JSON Web Token Authentication"<br>
 
 <h1>Basic Authentication in ViewSet</h1>
 <li>We need username, password for basic authentication. This one is generally only appropriate for testing purpose not for production.</li>
@@ -553,7 +587,6 @@ permission_classes=[AllowAny, IsAdminUser...etc] Same goes for authentication as
 
 ![authentication](https://user-images.githubusercontent.com/59610617/130386758-e194fd40-6f51-4bb3-828d-3b58721392a2.png)<br>
 
-
 <h1>Session Authentication</h1>
 <li>This authentication scheme use djangos's default session backend for authentication. This one is appropriate for AJAX clients that are running in the same session context as your website.</li> 
 <li>If successfully authenticated, this authentication provides the following credential:</li>
@@ -562,7 +595,6 @@ permission_classes=[AllowAny, IsAdminUser...etc] Same goes for authentication as
 3)unauthenticated responses: return HTTP 403 forbidden response.<br>
 <li>Tf you're using an AJAX style API with SessionAuthentication, you'll need to make sure you include a valid CSRF token for any "unsafe" HTTP method calls, such as PUT, PATCH, POST or DELETE requests.</li>
 <pre>
-urls.py
 urls.py
 --------
 from django.urls import path, include
@@ -578,9 +610,236 @@ router.register('studentapi',views.StudentViewSet,basename='student')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api',include(router.urls)),
+    path('auth/',include('rest_framework.urls',namespace='rest_framework'))             #will provide login/logout functionality
 ]
+
+views.py
+class StudentModelViewSet(viewsets.ModelViewSet):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    authentication_classes=[SessionAuthentication]
+    permission_classes=[DjangoModelPermissions]
 </pre>
 
+![session](https://user-images.githubusercontent.com/59610617/130560292-bcfd47da-42f5-4c89-878b-d556889c61ea.png)<br>
+
+<h1>Custom permission example</h1>
+<pre>
+Same model, serializer, urls in above example:
+
+Step 1: create .py file or any name, use CustomPermission for easily reference
+from rest_framework.permissions import BasePermission
+
+class MyPermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.method=='GET':
+            return True
+        return False
+        
+Step 2:
+views.py
+from custum_permissions import MyPermission
+
+class StudentModelViewSet(viewsets.ModelViewSet):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    authentication_classes=[SessionAuthentication]
+    permission_classes=[MyPermission]
+
+We can give any logic as in, in a blog post the person who created blog have edit,delete permission etc
+</pre>
+
+<h1>Token Authentication</h1>
+<li>This authentication scheme uses a simple token-based HTTP authentication scheme. Token authentication is appropriate for client-server setups, such as native desktop and mobile clients.</li>
+<li>If you use this authentication in production you must ensure that your API is only available over https.</li>
+<b>GENERATE TOKEN:</b>
+<li>Using Admin application</li>
+<li>Using django manage.py command >python manage.py drf_create_token <username>: this command will return Api token for the given user or create a token if token does'nt exist for user.</li>
+<li>By exposing an API endpoint</li>
+<li>Using signals</li>
+<pre>
+Same models.py, admin.py, serializers.py, urls.py as above
+
+Step1:
+settings.py
+INSTALLED_APPS = [
+    'rest_framework',
+    'rest_framework.authtoken',
+]
+
+Step2:
+after including token authentication we need to run migrate commands cuz it'll create a table Token
+
+Step3:
+generate token 
+---------------
+1)Using Admin: go to admin ->Token ->Select user for whom we need to create token -> Save 
+Now token will be generated for that particular user
+
+2)Using manage.py: python manage.py drf_create_token fareen
+If token exist will return else create for that user.
+
+3)By exposing an API endpoint: user create token in this case:
+Same models.py, admin.py, serializers.py as above
+
+Step 1:
+
+urls.py
+from rest_framework.authtoken .views import obtain_auth_token
+
+router=DefaultRouter()
+
+router.register('studentapi',views.Student,basename='student')
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('',include(router.urls)),
+    path('auth/',include('rest_framework.urls',namespace='rest_framework')),
+    path('gettoken/',obtain_auth_token)
+]
+
+Step 2:
+For this we need httpie, install it using pip >pip install httpie
+httpie: it is command like HTTP client, its goal is to make CLI interation with web services as human friendly as possible.
+
+On cmd: http POST http://127.0.0.1:8000/gettoken/ username="admin" password="admin"
+
+If the user request for token and if token exist it'll return and if not it'll create
+Using this token they can access the api
+
+We can use Custom authentication and in that we can return email, user_id etc from server and when user ask for token he'll get his email,user_id as well in return, for this we have to create another .py file and include in views and give url for the same.
+
+4)Using signals: whenever user created generate token
+Same models.py, admin.py, serializers.py as above
+
+urls.py
+router=DefaultRouter()
+
+router.register('studentapi',views.Student,basename='student')
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('',include(router.urls)),
+    path('auth/',include('rest_framework.urls',namespace='rest_framework')),
+]
+
+models.py
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
+
+@receiver(post_save,sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+        
+Now if any new user login there token will generated automatically
+
+Step 4:
+Using this tokens t access our API
+----------------------------------
+
+Permission class will be same for all authentication(basic, session, token).
+
+Sending request using httpie:
+http http://127.0.0.1:8000/studentapi/
+
+Will get the data cuz in views.py we didn't provide any permission so it is bydefault AllowAny everyone can access.
+
+views.py
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+class Student(viewsets.ModelViewSet):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    authentication_classes=[TokenAuthentication]
+    permission_classes=[IsAuthenticated]
+    
+Now we cannot access the api using the above url it'll deny the request
+To access this api use >http http://127.0.0.1:8000/studentapi/ 'Authorization:Token e7670717121b92145d0d5bcb1b3ed2ffcbfb591e'            #this is uses's key 
+
+To send post request:
+http -f POST http://127.0.0.1:8000/studentapi/  name="sam" roll=123 city="Mumbai" 'Authorization:Token e7670717121b92145d0d5bcb1b3ed2ffcbfb591e' 
+
+Using the token provided the user is performing the POST operation
+
+To send put request:
+http PUT http://127.0.0.1:8000/studentapi/4/  name="neha" roll=12 city="Mumbai" 'Authorization:Token e7670717121b92145d0d5bcb1b3ed2ffcbfb591e'
+
+To send delete request:
+http DELETE http://127.0.0.1:8000/studentapi/4/ 'Authorization:Token e7670717121b92145d0d5bcb1b3ed2ffcbfb591e'
+</pre>
+
+<h1>Custom authentication</h1>
+<pre>
+Same modes.py, serializers.py, admin.py and include rest_framework in settings.py
+
+urls.py
+from rest_framework.routers import DefaultRouter
+from rest_framework.authtoken .views import obtain_auth_token
+# from tokenapp.auth import CustomAuthToken
+
+router=DefaultRouter()
+
+router.register('studentapi',views.Student,basename='student')
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('',include(router.urls)),
+    path('auth/',include('rest_framework.urls',namespace='rest_framework')),
+    
+create .py file for custom authentication(custom_auth.py) can give any name:
+from rest_framework.authentication import BaseAuthentication
+from django.contrib.auth.models import User
+from rest_framework.exceptions import AuthenticationFailed
+
+class CustomeAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        username=request.GET.get('username')
+        if username is None:
+            return None
+
+        try:
+            user=User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise AuthenticationFailed('No such user')
+        return (user,None)
+        
+views.py
+from rest_framework.permissions import IsAuthenticated,AllowAny
+from tokenapp.custom_auth import CustomeAuthentication
+
+class Student(viewsets.ModelViewSet):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    authentication_classes=[CustomeAuthentication]
+    permission_classes=[IsAuthenticated]
+ 
+ 
+For this we'll hit http://127.0.0.1:8000/studentapi/username=admin  OR
+For delete, updtae http://127.0.0.1:8000/2/studentapi/username=admin
+</pre>
+
+<h1>JSON Web Token Authentication(JWT)</h1>
+<li>JWT is a fairly new standsrd which can be used for token based authentication. Unlike the built-in token authentication scheme, JWT authentication does'nt need to use a database to validate a token.</li>
+<li>So one benefit of this JWT token is in case of normal tokem authentication when there are 100 users all accessing api together then database perform 100 request together cuz token is stored in table in normal token authentication, in case of JWT token there's no database table generated. https://jwt.io/</li><br>
+
+<b>Simple JWT</b>
+We need to install it before using it:<br>
+>pip install djangorestframework-simplejwt
+
+To install it globally, meaning to make it common for all the classes the include it inside the settings.py<br>
+<pre>
+REST_FRAMEWORK={
+    'DEFAULT_AUTHENTICATION_CLASSES':(
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        )
+}
+</pre>
+
+pending
 
 
 
@@ -592,8 +851,8 @@ urlpatterns = [
 
 
 
-
-
+<h1>Permission in Function based view</h1>
+Giving Permission in function based view is slightly different than class based
 
 
 
