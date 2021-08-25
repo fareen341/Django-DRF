@@ -1122,15 +1122,91 @@ Data:
 
 <h2>Filter based on city</h2>
 <pre>
+Same serializers.py, models.py, urls.py and admin.py as above eg
+
 Step 1: for this we need filter installed >pip install django-filter
 
 Step 2: settings.py in installed apps
     'rest_framework',
-    'django-filter',
+    'django_filters'            
+
+Step 3:giving it globally
+settings.py
+REST_FRAMEWORK={
+    'DEFAULT_FILTER_BACKENDS':{
+        'django_filters.rest_framework.DjangoFilterBackend': '2/minute'
+    }
+}
+
+Step 3: views.py
+class StudentList(ListAPIView):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    filterset_fields = ['city']
+
+If we want filter on every class:
+remove the code in settings.py and add it in views.py
+
+from django_filters.rest_framework import DjangoFilterBackend
+class StudentList(ListAPIView):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['city']         
     
-PENDING
+ilterset_fields = ['name', 'city'] if we want to filter according to name and city
+We can also search using: http://127.0.0.1:8000/studentapi/?name=neha&city=Mumbai
+Now on browser's filter option we'll get name and city two option
+</pre>
+Now when we refresh page we'll get filter option on the browser<br>
+
+![filter](https://user-images.githubusercontent.com/59610617/130720329-f8be5e46-e386-41e1-8113-b500cf8e701a.png)<br>
+
+<h1>Search Filter</h1>
+We need char data for search filter to work.
+<pre>
+same urls.py, models, admins, serializers as above
+
+views.py
+from rest_framework.filters import SearchFilter
+
+class StudentList(ListAPIView):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['name','city']
+
+Now we'll get one search filter option which we can use to search according to name OR city not like above example name & city
 </pre>
 
+![search](https://user-images.githubusercontent.com/59610617/130721572-82521106-1629-4390-a7da-f5d55021d227.png)<br>
+
+<b>Regex in search filter</b><br>
+1)'^': startswith search.<br>
+2)'=': exact match.<br>
+3)'@': full-text search(currently support only on postgres sql).<br>
+4)'$': regex search.<br>
+<pre>
+class StudentList(ListAPIView):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['^name']
+</pre>
+<b>To change the default serach= on browser</b>
+<pre>
+Same views.py
+
+settings.py
+REST_FRAMEWORK={
+    'SEARCH_PARAM':'q'
+}
+
+Now the default http://127.0.0.1:8000/studentapi/?search=neha will change to 
+http://127.0.0.1:8000/studentapi/?q=neha
+</pre>
+
+<h1>Ordering Filter</h1>
 
 
 
