@@ -1207,8 +1207,20 @@ http://127.0.0.1:8000/studentapi/?q=neha
 </pre>
 
 <h1>Ordering Filter</h1>
+<pre>
+views.py
+from rest_framework.filters import OrderingFilter
 
+class StudentList(ListAPIView):
+    queryset=Student.objects.all()
+    serializer_class=StudentSerializer
+    filter_backends = [OrderingFilter]
+</pre>
+Here we did not give ordering_fields so we'll get order by every fileld which looks like below:
 
+![ordering](https://user-images.githubusercontent.com/59610617/130893328-b5a455a3-b9fa-4cd4-ae78-733dde29adda.png)<br>
+
+After giving "ordering_fileds = ["name"]" we'll get order by name asc and desc.<br>
 
 
 
