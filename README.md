@@ -6,6 +6,25 @@ NOTE: for using rest_framework it must be installed and included in the installe
 <a name="one"><h2>1.1 Django Web Framework</h2></a><br>
 <a name="two"><h2>1.2 Django Web Framework</h2></a><br>
 
+<h1>INTRODUCTION</h1>
+<b>XML</b><br>
+<p>Mostly use for configuration as in db configuration. We need namespace in xml.</p>
+<pre>
+&lt;emps&gt;
+    &lt;emp&gt;
+        &lt;id&gt;1&lt;/id&gt;
+        &lt;name>Fareen&lt;/name&gt;
+    &lt;/emp&gt;
+    &lt;emp&gt;
+        &lt;id&gt;2&lt;/id&gt;
+        &lt;name&gt;Annu&lt;/name&gt;
+    &lt;/emp&gt;
+&lt;/emps&gt;
+</pre>
+<p>Postman has code on right side which give code to fetch data, on code <> symbol</p>
+
+
+
 <h1>Using json Renderer</h1>
 <pre>
 settings.py
