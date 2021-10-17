@@ -339,10 +339,16 @@ from rest_framework import status
 from rest_framework import viewsets
 
 
-urls.py
----------
-from viewsetapi import views
-from rest_framework.routers import DefaultRouter
+views.py
+--------
+
+Using single class we can do CRUD operations
+
+class Userserializers(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = Userserializer
+    
+    -----OR----
 
 class StudentViewSet(viewsets.ViewSet):
     def list(self, request):
