@@ -1,8 +1,5 @@
 NOTE: for using rest_framework it must be installed and included in the installed_apps
 
-<a name="one"><h2>1.1 Django Web Framework</h2></a><br>
-<a name="two"><h2>1.2 Django Web Framework</h2></a><br>
-
 <h1>INTRODUCTION</h1>
 <b>XML</b><br>
 <p>Mostly use for configuration as in db configuration. We need namespace in xml.</p>
