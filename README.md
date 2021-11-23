@@ -1,6 +1,3 @@
-[<p>1.1 Getting Started with Django</p>](#one)
-[<p>2.2 URLs and Views</p>](#two)
-
 NOTE: for using rest_framework it must be installed and included in the installed_apps
 
 <a name="one"><h2>1.1 Django Web Framework</h2></a><br>
