@@ -17,7 +17,23 @@ NOTE: for using rest_framework it must be installed and included in the installe
 </pre>
 <p>Postman has code on right side which give code to fetch data, on code <> symbol</p>
 
+<h1>Methods</h1>
+<pre>
+1)GET
+The GET method requests a representation of the specified resource. Requests using GET should only retrieve data.
 
+2)POST
+The POST method is used to submit an entity to the specified resource, often causing a change in state or side effects on the server.
+
+3)PUT
+Complete update
+
+4)DELETE
+The DELETE method deletes the specified resource.
+
+5)PATCH
+Partial update
+</pre>
 
 <h1>Using json Renderer</h1>
 <pre>
