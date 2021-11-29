@@ -1249,4 +1249,17 @@ After giving "ordering_fileds = ["name"]" we'll get order by name asc and desc.<
 Giving Permission in function based view is slightly different than class based
 
 
+<h1>ERRORS</h1>
+1) create() must be implemented:<br>
+in this error take model serializers<br>
+<pre>
+from rest_framework import serializers
+from .models import Student
+
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = ['id','name','roll','city']
+</pre>
+
 
