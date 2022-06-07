@@ -1,3 +1,5 @@
+<h3>Enabling cors for react app in django project</h3>
+
 NOTE: for using rest_framework it must be installed and included in the installed_apps
 
 <h1>INTRODUCTION</h1>
@@ -1278,4 +1280,38 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = ['id','name','roll','city']
 </pre>
 
+
+<h3>Enabling cors in django project for react app</h3>
+<pre>
+Step1:
+$ python -m pip install django-cors-headers
+
+
+
+Step2:
+and then add it to your installed apps:
+
+INSTALLED_APPS = (
+    ...
+    'corsheaders',
+    ...
+)
+
+Step3:
+You will also need to add a middleware class to listen in on responses:
+
+MIDDLEWARE = [
+    ...,
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    ...,
+]
+
+Step4:
+and specify domains for CORS, e.g.:
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3030',
+]
+</pre>
 
