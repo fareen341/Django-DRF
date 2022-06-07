@@ -1313,5 +1313,8 @@ and specify domains for CORS, e.g.:
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3030',
 ]
+
+If it still dont work add these in allowed hosts
+ALLOWED_HOSTS = ["*","http://localhost:3000","3000"]
 </pre>
 
