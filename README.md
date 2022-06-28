@@ -1318,3 +1318,65 @@ If it still dont work add these in allowed hosts
 ALLOWED_HOSTS = ["*","http://localhost:3000","3000"]
 </pre>
 
+<h1>QUESTIONS</h1>
+<h3>What is serialization in django?</h3>
+<pre>
+Serialization is used to convert python objects into data types understandable by javascript and front-end frameworks. Serializers also provide deserialization, allowing parsed data to be converted back into complex types, after first validating the incoming data.
+</pre>
+
+<h3>What is cors</h3>
+<pre>
+Cross-Origin Resource Sharing (CORS) is a protocol that enables scripts running on a browser client to interact with resources from a different origin.
+</pre>
+
+<h3>What is the difference between stateful and stateless?</h3>
+<pre>
+</pre>
+
+<h3>Permissions in DRF</h3>
+
+<h3>Authentication in DRF, also How to add login in the browsable API provided by DRF</h3>
+
+<h3>What is access and refresh token</h3>
+<pre>
+1)ALong with user credential one access token is sent with user credential. That token will be used to access 
+protected resources.
+2)On the given lifespan of access token it expires but the refresh token can be used in place of access token.
+So that if anyone get the access of access token it'll expire and refresh token can be use. 
+</pre>
+
+<h3>What is viewset</h3>
+<pre>
+Viewset provides methods: list, retrive, create, update, partial_update, destroy
+
+list(): get all records.
+retrive(): get single record.
+create(): create/insert record.
+update(): update record completely.
+partial_update(): update record partially.
+destroy(): delete record.
+</pre>
+
+<h3>Routers in DRF</h3>
+<pre>
+1)Simple Router
+2)Default Router: includes a default API root view, that returns a response containing hyperlinks to all the list views.
+like if we have 3 apis, all the links of that api will be listed here.
+</pre>
+
+<h3>What is difference between APIView and ViewSet?</h3>
+<pre>
+APIView allow us to define functions that match standard HTTP methods like GET, POST, PUT, PATCH, etc. 
+Viewsets allow us to define functions that match to common API object actions like : LIST, CREATE, RETRIEVE, UPDATE, etc.
+</pre>
+
+<h3>What is the difference between GenericAPIView and GenericViewset?</h3>
+<pre>
+GenericAPIView: It Adds commonly required behavior for standard list and detail views. Gives you some attributes like, the serializer_class, also gives pagination_class, filter_backend, etc
+
+GenericViewSet: There are many GenericViewSet, the most common being ModelViewSet. 
+ReadOnlyModelViewSet: we cannot post,update, delete, we can list and retrive only cuz this is real only.
+</pre>
+
+
+
