@@ -1321,7 +1321,10 @@ ALLOWED_HOSTS = ["*","http://localhost:3000","3000"]
 <h1>QUESTIONS</h1>
 <h3>What is serialization in django?</h3>
 <pre>
-Serialization is used to convert python objects into data types understandable by javascript and front-end frameworks. Serializers also provide deserialization, allowing parsed data to be converted back into complex types, after first validating the incoming data.
+Serialization is used to convert python objects into data types understandable by javascript and front-end frameworks. Serializers also provide 
+deserialization, allowing parsed data to be converted back into complex types, after first validating the incoming data.
+
+and you deserialize it when you save it to the model with a POST/PUT request.
 </pre>
 
 <h3>What is cors</h3>
